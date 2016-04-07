@@ -1,6 +1,6 @@
 ﻿using NodaTime;
 using System;
-using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,34 +9,41 @@ using Svg;
 
 namespace LocalPefChartinator
 {
-    class Program
+    public class Program
     {
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
-            System.IO.File.WriteAllText("out.svg", generate(null));
+            System.IO.File.WriteAllText("out.svg", Generate());
         }
 
-        static string generate(IEnumerable<DataPoint> data)
+        private static string Generate()
         {
             var document = new SvgDocument()
             {
                 Width = 100,
                 Height = 100
             };
-            document.Children.Add(new SvgCircle() { CenterX = 50, CenterY = 50, Radius = 40, str });
-            
+            document.Children.Add(
+                new SvgCircle() {
+                    CenterX = 50, 
+                    CenterY = 50, 
+                    Radius = 40, 
+                    Stroke = new SvgColourServer(Color.Green){StrokeWidth = new SvgUnit(4)},
+                    Fill =  new SvgColourServer(Color.Yellow)
+                });
+            return document.GetXML();
         }
     }
 
-    struct DataPoint
+    internal struct DataPoint
     {
-        public readonly int pef;
-        public readonly Instant time;
+        public readonly int Pef;
+        public readonly Instant Time;
 
         public DataPoint(int pef, Instant time)
         {
-            this.pef = pef;
-            this.time = time;
+            Pef = pef;
+            Time = time;
         }
     }
 }
