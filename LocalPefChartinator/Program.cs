@@ -15,7 +15,9 @@ namespace LocalPefChartinator
     public class Program
     {
         private static readonly SvgColourServer LineColor = new SvgColourServer(Color.Blue);
-        private const int DayWidth = 50;
+        private const int SegmentWidth = 15;
+        private const int SegmentsPerDay = 4;
+        private const int DayWidth = SegmentWidth * SegmentsPerDay;
         private const int SideColumnWidth = 60;
         private const int DaysPerWeek = 7;
         private const int Weeks = 3;
@@ -24,6 +26,7 @@ namespace LocalPefChartinator
         private const float PefSize = 1f;
         private const int DayRow = 230;
         private const int DateRow = 230;
+        private const int PefIncrement = 10;
 
         private const float ChartHeight = MaxPef * PefSize;
         private const float ChartWidth = Weeks*DaysPerWeek*DayWidth;
@@ -55,48 +58,36 @@ namespace LocalPefChartinator
                 Fill =  new SvgColourServer(Color.Transparent),
                 Stroke = LineColor
             });
-            contentGroup.Children.Add(new SvgLine()
-            {
-                StartX = SideColumnWidth,
-                StartY = 0,
-                EndX = SideColumnWidth,
-                EndY = Height,
-                Stroke = LineColor
-            });
-            contentGroup.Children.Add(new SvgLine()
-            {
-                StartX = Width - SideColumnWidth,
-                StartY = 0,
-                EndX = Width - SideColumnWidth,
-                EndY = Height,
-                Stroke = LineColor
-            });
+            contentGroup.Children.Add(Line(SideColumnWidth, 0, SideColumnWidth, Height));
+            contentGroup.Children.Add(Line(Width - SideColumnWidth, 0, Width - SideColumnWidth, Height));
             contentGroup.Children.Add(GetTopGroup());
             contentGroup.Children.Add(GetChartGroup());
             contentGroup.Children.Add(GetDayGroup());
             contentGroup.Children.Add(GetDateGroup());
+            contentGroup.Children.Add(CreateColumnGroup(0));
+            contentGroup.Children.Add(CreateColumnGroup(ChartWidth + SideColumnWidth));
             document.Children.Add(contentGroup);
             return document.GetXML();
         }
 
-        private static SvgElement GetTopGroup()
+        private static SvgGroup GetTopGroup()
         {
             SvgGroup group = new SvgGroup()
             {
                 Transforms = new SvgTransformCollection() { new SvgTranslate(SideColumnWidth, 0)}
             };
-            group.Children.Add(new SvgLine()
+            group.Children.Add(Line(0, TopRow, ChartWidth, TopRow));
+            group.Children.Add(Line(0, 0, 0, TopRow));
+            for (int i = 0; i < DaysPerWeek * Weeks * SegmentsPerDay + 1; i++)
             {
-                StartX = 0,
-                StartY = TopRow,
-                EndX = ChartWidth,
-                EndY = TopRow,
-                Stroke = LineColor
-            });
+                int length = i % SegmentsPerDay == 0 ? TopRow : TopRow / 6;
+                int x = i*SegmentWidth;
+                group.Children.Add(Line(x, TopRow, x, TopRow - length));
+            }
             return group;
         }
 
-        private static SvgElement GetChartGroup()
+        private static SvgGroup GetChartGroup()
         {
             SvgGroup group = new SvgGroup()
             {
@@ -113,7 +104,7 @@ namespace LocalPefChartinator
             return group;
         }
 
-        private static SvgElement GetDayGroup()
+        private static SvgGroup GetDayGroup()
         {
             SvgGroup group = new SvgGroup()
             {
@@ -130,7 +121,7 @@ namespace LocalPefChartinator
             return group;
         }
 
-        private static SvgElement GetDateGroup()
+        private static SvgGroup GetDateGroup()
         {
             SvgGroup group = new SvgGroup()
             {
@@ -145,6 +136,74 @@ namespace LocalPefChartinator
                 Stroke = LineColor
             });
             return group;
+        }
+
+        private static SvgGroup CreateColumnGroup(float offset)
+        {
+            SvgGroup group = new SvgGroup()
+            {
+                Transforms = new SvgTransformCollection() {new SvgTranslate(offset, TopRow)}
+            };
+            for (int i = 0; i < SegmentsPerDay + 1; i++)
+            {
+                int x = i*SegmentWidth;
+                group.Children.Add(Line(x, 0, x, ChartHeight));
+            }
+
+            for (int i = 0; i <= MaxPef; i += PefIncrement)
+            {
+                int pos = MaxPef - i;
+                if (i%50 == 0 && i != 0)
+                {
+                    group.Children.Add(Rect(0, pos - PefIncrement, SideColumnWidth, PefIncrement*2));
+                    group.Children.Add(Text(SideColumnWidth / 2f, pos + 6, i.ToString()));
+                }
+                else
+                {
+                    group.Children.Add(Line(0, pos, SideColumnWidth, pos));
+                }
+            }
+
+            return group;
+        }
+
+        private static SvgLine Line(float x1, float y1, float x2, float y2)
+        {
+            return new SvgLine()
+            {
+                StartX = x1,
+                StartY = y1,
+                EndX = x2,
+                EndY = y2,
+                Stroke = LineColor
+            };
+        }
+
+        private static SvgRectangle Rect(float x, float y, float width, float height)
+        {
+            return new SvgRectangle()
+            {
+                X = x,
+                Y = y,
+                Width = width,
+                Height = height,
+                Stroke = LineColor,
+                Fill = new SvgColourServer(Color.White)
+            };
+        }
+
+        private static SvgText Text(float x, float y, string text)
+        {
+            var svgText = new SvgText()
+            {
+                TextAnchor = SvgTextAnchor.Middle,
+                Fill = new SvgColourServer(Color.Black),
+                X = new SvgUnitCollection(){x},
+                Y = new SvgUnitCollection(){y},
+                FontSize = new SvgUnit(16)
+            };
+            svgText.Nodes.Add(new SvgContentNode(){Content = text});
+            return svgText;
         }
     }
 
