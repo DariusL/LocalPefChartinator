@@ -2,6 +2,8 @@
 using System;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -11,6 +13,10 @@ namespace LocalPefChartinator
 {
     public class Program
     {
+        private const int Width = 800;
+        private const int Height = 700;
+        private const int Padding = 10;
+
         public static void Main(string[] args)
         {
             System.IO.File.WriteAllText("out.svg", Generate());
@@ -18,18 +24,20 @@ namespace LocalPefChartinator
 
         private static string Generate()
         {
-            var document = new SvgDocument()
+            var document = new SvgDocument
             {
-                Width = 100,
-                Height = 100
+                Width = Width + Padding * 2,
+                Height = Height + Padding * 2,
+                ViewBox = new SvgViewBox(-Padding, -Padding, Width, Height)
             };
             document.Children.Add(
-                new SvgCircle() {
-                    CenterX = 50, 
-                    CenterY = 50, 
-                    Radius = 40, 
-                    Stroke = new SvgColourServer(Color.Green){StrokeWidth = new SvgUnit(4)},
-                    Fill =  new SvgColourServer(Color.Yellow)
+                new SvgRectangle()
+                {   
+                    Width = Width,
+                    Height =  Height,
+                    Fill =  new SvgColourServer(Color.Blue),
+                    Stroke = new SvgColourServer(Color.Aqua),
+                    StrokeWidth = new SvgUnit(2)
                 });
             return document.GetXML();
         }
