@@ -97,6 +97,8 @@ namespace LocalPefChartinator
                 group.Children.Add(Line(x, 0, x, endOfDay ? DataHeight : ChartHeight, endOfWeek ? 2.5f : 1f));
             }
 
+            group.Children.Add(Line(0, ChartHeight + DayRow, ChartWidth, ChartHeight + DayRow));
+
             return group;
         }
 
@@ -119,7 +121,8 @@ namespace LocalPefChartinator
             }
             for (int i = 0; i <= MaxPef; i+=PefIncrement)
             {
-                group.Children.Add(Line(0, i, ChartWidth, i));
+                int pef = MaxPef - i;
+                group.Children.Add(Line(0, i, ChartWidth, i, pef % 100 == 0 ? 2f : 1f));
             }
             return group;
         }
