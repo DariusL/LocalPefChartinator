@@ -1,5 +1,6 @@
 ﻿using NodaTime;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -38,22 +39,30 @@ namespace LocalPefChartinator
 
         public static void Main(string[] args)
         {
-            System.IO.File.WriteAllText("out.svg", Generate());
+            var now = new ZonedDateTime(SystemClock.Instance.Now, DateTimeZone.Utc);
+            System.IO.File.WriteAllText("out.svg", Generate(
+            new[]
+            {
+                new DataPoint(500, now), 
+                new DataPoint(550, now.Plus(Duration.FromStandardDays(2).Plus(Duration.FromHours(5)))),
+                new DataPoint(580, now.Plus(Duration.FromStandardDays(2).Plus(Duration.FromHours(8))))
+            }
+        ));
         }
 
-        private static string Generate()
+        private static string Generate(IReadOnlyList<DataPoint> data)
         {
             var document = new SvgDocument
             {
                 Width = Width + Padding * 2,
                 Height = Height + Padding * 2
             };
-            var contentGroup = GetContentGroup(Padding, Padding);
+            var contentGroup = GetContentGroup(Padding, Padding, data);
             document.Children.Add(contentGroup);
             return document.GetXML();
         }
 
-        private static SvgGroup GetContentGroup(float left, float top)
+        private static SvgGroup GetContentGroup(float left, float top, IReadOnlyList<DataPoint> data)
         {
             SvgGroup contentGroup = Group(left, top);
             contentGroup.Children.Add(new SvgRectangle()
@@ -64,7 +73,7 @@ namespace LocalPefChartinator
                 Stroke = LineColor
             });
             contentGroup.Children.Add(GetBorderGroup(0, 0));
-            contentGroup.Children.Add(GetDataGroup(SideColumnWidth, TopRow));
+            contentGroup.Children.Add(GetDataGroup(SideColumnWidth, TopRow, data));
             return contentGroup;
         }
 
@@ -82,7 +91,7 @@ namespace LocalPefChartinator
             return group;
         }
 
-        private static SvgGroup GetDataGroup(float left, float top)
+        private static SvgGroup GetDataGroup(float left, float top, IReadOnlyList<DataPoint> data)
         {
             SvgGroup group = Group(left, top);
             group.Children.Add(GetChartGroup(0, 0));
@@ -99,6 +108,37 @@ namespace LocalPefChartinator
 
             group.Children.Add(Line(0, ChartHeight + DayRow, ChartWidth, ChartHeight + DayRow));
 
+            group.Children.Add(GetChartDataGroup(0, 0, data));
+            group.Children.Add(GetDaysDataGroup(0, ChartHeight, data.First().Time.Date));
+
+            return group;
+        }
+
+        private static SvgGroup GetChartDataGroup(float left, float top, IReadOnlyList<DataPoint> data)
+        {
+            var first = data.First();
+            var start = first.Time.Date.At(new LocalTime(0, 0));
+
+            SvgGroup group = Group(left, top);
+            foreach (var point in data)
+            {
+                var between = Period.Between(start, point.Time.LocalDateTime).ToDuration();
+                group.Children.Add(Circle((float) (between.ToTimeSpan().TotalDays * DayWidth), MaxPef - point.Pef));
+            }
+            return group;
+        }
+
+        private static SvgGroup GetDaysDataGroup(float left, float top, LocalDate start)
+        {
+            SvgGroup group = Group(left, top);
+            for (int i = 0; i < DaysPerWeek * Weeks; i++)
+            {
+                var day = start.PlusDays(i);
+
+                var x = 38 + i * DayWidth;
+                group.Children.Add(Text(x, DayRow / 2f, -90, day.IsoDayOfWeek.ToString()));
+                group.Children.Add(Text(x, DayRow + DateRow / 2f, -90, day.ToString()));
+            }
             return group;
         }
 
@@ -228,6 +268,31 @@ namespace LocalPefChartinator
             return svgText;
         }
 
+        private static SvgText Text(float x, float y, float rotate, string text)
+        {
+            var svgText = new SvgText()
+            {
+                TextAnchor = SvgTextAnchor.Middle,
+                Fill = new SvgColourServer(Color.Black),
+                FontSize = new SvgUnit(16)
+            };
+            svgText.Nodes.Add(new SvgContentNode() { Content = text });
+            svgText.Transforms.Add(new SvgTranslate(x, y));
+            svgText.Transforms.Add(new SvgRotate(rotate));
+            return svgText;
+        }
+
+        private static SvgCircle Circle(float cx, float cy)
+        {
+            return new SvgCircle()
+            {
+                CenterX = cx,
+                CenterY = cy,
+                Fill = LineColor,
+                Radius = new SvgUnit(5)
+            };
+        }
+
         private static SvgGroup Group(float left, float top)
         {
             return new SvgGroup()
@@ -245,9 +310,9 @@ namespace LocalPefChartinator
     internal struct DataPoint
     {
         public readonly int Pef;
-        public readonly Instant Time;
+        public readonly ZonedDateTime Time;
 
-        public DataPoint(int pef, Instant time)
+        public DataPoint(int pef, ZonedDateTime time)
         {
             Pef = pef;
             Time = time;
