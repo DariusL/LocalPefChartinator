@@ -27,12 +27,13 @@ namespace LocalPefChartinator
         private const int DayRow = 230;
         private const int DateRow = 230;
         private const int PefIncrement = 10;
+        private const float DataHeight = ChartHeight + DayRow + DateRow;
 
         private const float ChartHeight = MaxPef * PefSize;
         private const float ChartWidth = Weeks*DaysPerWeek*DayWidth;
 
         private const float Width = ChartWidth + SideColumnWidth * 2;
-        private const float Height = TopRow + ChartHeight + DayRow + DateRow;
+        private const float Height = TopRow + DataHeight;
         private const int Padding = 10;
 
         public static void Main(string[] args)
@@ -47,27 +48,27 @@ namespace LocalPefChartinator
                 Width = Width + Padding * 2,
                 Height = Height + Padding * 2
             };
-            var contentGroup = new SvgGroup()
-            {
-                Transforms = new SvgTransformCollection {new SvgTranslate(Padding, Padding)}
-            };
-            contentGroup.Children.Add(new SvgRectangle()
-            {   
-                Width = Width,
-                Height =  Height,
-                Fill =  new SvgColourServer(Color.Transparent),
-                Stroke = LineColor
-            });
-            contentGroup.Children.Add(Line(SideColumnWidth, 0, SideColumnWidth, Height));
-            contentGroup.Children.Add(Line(Width - SideColumnWidth, 0, Width - SideColumnWidth, Height));
-            contentGroup.Children.Add(GetTopGroup());
-            contentGroup.Children.Add(GetChartGroup());
-            contentGroup.Children.Add(GetDayGroup());
-            contentGroup.Children.Add(GetDateGroup());
-            contentGroup.Children.Add(CreateColumnGroup(0));
-            contentGroup.Children.Add(CreateColumnGroup(ChartWidth + SideColumnWidth));
+            var contentGroup = GetContentGroup();
             document.Children.Add(contentGroup);
             return document.GetXML();
+        }
+
+        private static SvgGroup GetContentGroup()
+        {
+            SvgGroup contentGroup = new SvgGroup()
+            {
+                Transforms = new SvgTransformCollection { new SvgTranslate(Padding, Padding) }
+            };
+            contentGroup.Children.Add(new SvgRectangle()
+            {
+                Width = Width,
+                Height = Height,
+                Fill = new SvgColourServer(Color.Transparent),
+                Stroke = LineColor
+            });
+            contentGroup.Children.Add(GetBorderGroup());
+            contentGroup.Children.Add(GetDataGroup());
+            return contentGroup;
         }
 
         private static SvgGroup GetTopGroup()
@@ -87,20 +88,48 @@ namespace LocalPefChartinator
             return group;
         }
 
-        private static SvgGroup GetChartGroup()
+        private static SvgGroup GetDataGroup()
         {
             SvgGroup group = new SvgGroup()
             {
-                Transforms = new SvgTransformCollection() {new SvgTranslate(SideColumnWidth, TopRow)}
+                Transforms = new SvgTransformCollection() { new SvgTranslate(SideColumnWidth, TopRow)}
             };
-            group.Children.Add(new SvgLine()
+            group.Children.Add(GetChartGroup());
+            group.Children.Add(GetDayGroup());
+            group.Children.Add(GetDateGroup());
+
+            for (int i = 0; i <= Weeks * DaysPerWeek * SegmentsPerDay; i++)
             {
-                StartX = 0,
-                StartY = ChartHeight,
-                EndX = ChartWidth,
-                EndY = ChartHeight,
-                Stroke = LineColor
-            });
+                float x = i * SegmentWidth;
+                bool endOfWeek = (i % (SegmentsPerDay * DaysPerWeek)) == 0;
+                bool endOfDay = (i % SegmentsPerDay) == 0;
+                group.Children.Add(Line(x, 0, x, endOfDay ? DataHeight : ChartHeight, endOfWeek ? 2.5f : 1f));
+            }
+
+            return group;
+        }
+
+        private static SvgGroup GetBorderGroup()
+        {
+            SvgGroup group = new SvgGroup();
+            group.Children.Add(GetTopGroup());
+            group.Children.Add(CreateColumnGroup(0));
+            group.Children.Add(CreateColumnGroup(ChartWidth + SideColumnWidth));
+            return group;
+        }
+
+        private static SvgGroup GetChartGroup()
+        {
+            SvgGroup group = new SvgGroup();
+            for (int i = 0; i < Weeks * DaysPerWeek; i += 2)
+            {
+                float x = DayWidth * i;
+                group.Children.Add(Rect(x, 0, DayWidth, ChartHeight, Color.AliceBlue));
+            }
+            for (int i = 0; i <= MaxPef; i+=PefIncrement)
+            {
+                group.Children.Add(Line(0, i, ChartWidth, i));
+            }
             return group;
         }
 
@@ -108,16 +137,12 @@ namespace LocalPefChartinator
         {
             SvgGroup group = new SvgGroup()
             {
-                Transforms = new SvgTransformCollection() { new SvgTranslate(SideColumnWidth, TopRow + ChartHeight)}
+                Transforms = new SvgTransformCollection() { new SvgTranslate(0, ChartHeight)}
             };
-            group.Children.Add(new SvgLine()
+            for (int i = 0; i < Weeks * DaysPerWeek; i++)
             {
-                StartX = 0,
-                StartY = DayRow,
-                EndX = ChartWidth,
-                EndY = DayRow,
-                Stroke = LineColor
-            });
+                group.Children.Add(Line(i * DayWidth, 0, i * DayWidth, DayRow));
+            }
             return group;
         }
 
@@ -125,7 +150,7 @@ namespace LocalPefChartinator
         {
             SvgGroup group = new SvgGroup()
             {
-                Transforms = new SvgTransformCollection() { new SvgTranslate(SideColumnWidth, TopRow + ChartHeight + DayRow) }
+                Transforms = new SvgTransformCollection() { new SvgTranslate(0, ChartHeight + DayRow) }
             };
             group.Children.Add(new SvgLine()
             {
@@ -164,10 +189,20 @@ namespace LocalPefChartinator
                 }
             }
 
+            group.Children.Add(Text(SideColumnWidth / 2f, ChartHeight + DayRow / 2f, "Day"));
+            group.Children.Add(Line(0, ChartHeight + DayRow, SideColumnWidth, ChartHeight + DayRow));
+            group.Children.Add(Text(SideColumnWidth / 2f, ChartHeight + DayRow + DateRow / 2f, "Date"));
+
             return group;
         }
 
-        private static SvgLine Line(float x1, float y1, float x2, float y2)
+        private static SvgElement Line(float x1, float y1, float x2, float y2)
+        {
+            return Line(x1, y1, x2, y2, 1f);
+        }
+
+
+        private static SvgLine Line(float x1, float y1, float x2, float y2, float width)
         {
             return new SvgLine()
             {
@@ -175,11 +210,17 @@ namespace LocalPefChartinator
                 StartY = y1,
                 EndX = x2,
                 EndY = y2,
-                Stroke = LineColor
+                Stroke = LineColor,
+                StrokeWidth = new SvgUnit(width)
             };
         }
 
         private static SvgRectangle Rect(float x, float y, float width, float height)
+        {
+            return Rect(x, y, width, height, Color.White);
+        }
+
+        private static SvgRectangle Rect(float x, float y, float width, float height, Color color)
         {
             return new SvgRectangle()
             {
@@ -188,7 +229,7 @@ namespace LocalPefChartinator
                 Width = width,
                 Height = height,
                 Stroke = LineColor,
-                Fill = new SvgColourServer(Color.White)
+                Fill = new SvgColourServer(color)
             };
         }
 
