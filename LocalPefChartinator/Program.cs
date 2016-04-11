@@ -31,7 +31,7 @@ namespace LocalPefChartinator
                     .Select(array => new Tuple<string, string>(array[0], array[1]));
 
                 var parsed = DataParser.Parse(values, options.TimeZone);
-
+                
                 File.WriteAllText(options.OutputFile, ChartGenerator.Generate(parsed));
             }
         }
