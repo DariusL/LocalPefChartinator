@@ -21,7 +21,7 @@ namespace LocalPefChartinator
 
         private static DataPoint Parse(Tuple<string, string> tuple, DateTimeZone timezone)
         {
-            long time = Int64.Parse(tuple.Item1);
+            long time = long.Parse(tuple.Item1);
             Instant instant = Instant.FromSecondsSinceUnixEpoch(time);
             int pef = int.Parse(tuple.Item2);
             return new DataPoint(pef, new ZonedDateTime(instant, timezone));
