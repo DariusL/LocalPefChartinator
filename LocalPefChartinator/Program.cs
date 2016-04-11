@@ -1,33 +1,39 @@
-﻿using NodaTime;
-using System;
-using System.Collections.Generic;
-using System.Drawing;
+﻿using System;
+using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
-using Svg;
-using Svg.Transforms;
+using CommandLine;
 
 namespace LocalPefChartinator
 {
     public class Program
     {
-       
+
+        class Options
+        {
+            [Option("in", Required = true, HelpText = "Input csv file")]
+            public string InputFile { get; set; }
+
+            [Option("out", Required = false, DefaultValue = "out.svg", HelpText = "Output svg file")]
+            public string OutputFile { get; set; }
+
+            [Option("tz", Required = false, DefaultValue = "Z", HelpText = "Timezone offset, example: +03:00")]
+            public string TimeZone { get; set; }
+        }
 
         public static void Main(string[] args)
         {
-            var now = new ZonedDateTime(SystemClock.Instance.Now, DateTimeZone.Utc);
-            System.IO.File.WriteAllText("out.svg", ChartGenerator.Generate(
-            new[]
+            Options options = new Options();
+            if (CommandLine.Parser.Default.ParseArgumentsStrict(args, options, () => { }))
             {
-                new DataPoint(500, now), 
-                new DataPoint(550, now.Plus(Duration.FromStandardDays(2).Plus(Duration.FromHours(5)))),
-                new DataPoint(580, now.Plus(Duration.FromStandardDays(2).Plus(Duration.FromHours(8))))
+                var values = 
+                    File.ReadLines(options.InputFile)
+                    .Select(line => line.Split(','))
+                    .Select(array => new Tuple<string, string>(array[0], array[1]));
+
+                var parsed = DataParser.Parse(values, options.TimeZone);
+
+                File.WriteAllText(options.OutputFile, ChartGenerator.Generate(parsed));
             }
-            ));
         }
     }
 }

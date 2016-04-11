@@ -13,7 +13,7 @@ namespace LocalPefChartinator
 {
     public class DataParser
     {
-        public static IReadOnlyList<DataPoint> Parse(IReadOnlyList<Tuple<string, string>> data, string timezone)
+        public static IReadOnlyList<DataPoint> Parse(IEnumerable<Tuple<string, string>> data, string timezone)
         {
             DateTimeZone tz = ParseTimeZone(timezone);
             return data.Select(item => Parse(item, tz)).ToArray();
