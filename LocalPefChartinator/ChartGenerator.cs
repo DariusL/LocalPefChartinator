@@ -72,6 +72,16 @@ namespace LocalPefChartinator
                 int length = i % SegmentsPerDay == 0 ? TopRow : TopRow / 6;
                 int x = i * SegmentWidth;
                 group.Children.Add(Line(x, TopRow, x, TopRow - length));
+
+                bool morning = i % SegmentsPerDay - 1 == 0;
+                bool evening = i % SegmentsPerDay - 3 == 0;
+
+                float textY = TopRow * 3/5f;
+                float textX = x + 4f;
+                if(morning)
+                    group.Children.Add(Text(textX, textY, -90, "6am"));
+                if(evening)
+                    group.Children.Add(Text(textX, textY, -90, "6pm"));
             }
             return group;
         }
