@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
+using System.Net;
 using CommandLine;
 
 namespace LocalPefChartinator
@@ -11,6 +13,7 @@ namespace LocalPefChartinator
         {
             Svg,
             Html,
+            Pdf,
             Invalid
         }
 
@@ -60,6 +63,8 @@ namespace LocalPefChartinator
                     return OutputFormat.Svg;
                 case "html":
                     return OutputFormat.Html;
+                case "pdf":
+                    return OutputFormat.Pdf;
                 default:
                     return OutputFormat.Invalid;
             }
@@ -75,6 +80,9 @@ namespace LocalPefChartinator
                 case OutputFormat.Html:
                     WriteHtml(svg, file);
                     break;
+                case OutputFormat.Pdf:
+                    WritePdf(svg, file);
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException("format", format, null);
             }
@@ -87,12 +95,33 @@ namespace LocalPefChartinator
 
         private static void WriteHtml(string svg, string file)
         {
+            string result = SvgToHtml(svg);
+            File.WriteAllText(file, result);
+        }
+
+        private static void WritePdf(string svg, string file)
+        {
+            string key = "8393e676-9660-4fc0-a9c2-674a3614f650";
+            string html = SvgToHtml(svg);
+            using (var client = new WebClient())
+            {
+                NameValueCollection options = new NameValueCollection();
+                options.Add("apikey", key);
+                options.Add("value", html);
+
+                var result = client.UploadValues("http://api.html2pdfrocket.com/pdf", options);
+
+                File.WriteAllBytes(file, result);
+            }
+        }
+
+        private static string SvgToHtml(string svg)
+        {
             string template = File.ReadAllText("template.html");
             // because Svg uses invariant culture when XML'ing
             var lineEnd = svg.IndexOf(Environment.NewLine, StringComparison.InvariantCulture);
             svg = svg.Substring(lineEnd + Environment.NewLine.Length);
-            string result = template.Replace("<!--content-->", svg);
-            File.WriteAllText(file, result);
+            return template.Replace("<!--content-->", svg);
         }
     }
 }
