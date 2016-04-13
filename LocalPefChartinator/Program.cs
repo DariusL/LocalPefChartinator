@@ -73,7 +73,7 @@ namespace LocalPefChartinator
                     WriteSvg(svg, file);
                     break;
                 case OutputFormat.Html:
-                    throw new NotImplementedException();
+                    WriteHtml(svg, file);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException("format", format, null);
@@ -83,6 +83,16 @@ namespace LocalPefChartinator
         private static void WriteSvg(string svg, string file)
         {
             File.WriteAllText(file, svg);
+        }
+
+        private static void WriteHtml(string svg, string file)
+        {
+            string template = File.ReadAllText("template.html");
+            // because Svg uses invariant culture when XML'ing
+            var lineEnd = svg.IndexOf(Environment.NewLine, StringComparison.InvariantCulture);
+            svg = svg.Substring(lineEnd + Environment.NewLine.Length);
+            string result = template.Replace("<!--content-->", svg);
+            File.WriteAllText(file, result);
         }
     }
 }
