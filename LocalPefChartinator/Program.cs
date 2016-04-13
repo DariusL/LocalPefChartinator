@@ -105,9 +105,7 @@ namespace LocalPefChartinator
             string html = SvgToHtml(svg);
             using (var client = new WebClient())
             {
-                NameValueCollection options = new NameValueCollection();
-                options.Add("apikey", key);
-                options.Add("value", html);
+                NameValueCollection options = new NameValueCollection {{"apikey", key}, {"value", html}};
 
                 var result = client.UploadValues("http://api.html2pdfrocket.com/pdf", options);
 
