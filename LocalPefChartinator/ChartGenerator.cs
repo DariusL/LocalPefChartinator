@@ -7,10 +7,11 @@ using System.Threading.Tasks;
 using NodaTime;
 using Svg;
 using Svg.Transforms;
+using LocalPefChartinator.Util;
 
 namespace LocalPefChartinator
 {
-    class ChartGenerator
+    public class ChartGenerator
     {
         private static readonly SvgColourServer LineColor = new SvgColourServer(Color.Blue);
         private const int SegmentWidth = 15;
@@ -26,9 +27,10 @@ namespace LocalPefChartinator
         private const int DateRow = 230;
         private const int PefIncrement = 10;
         private const float DataHeight = ChartHeight + DayRow + DateRow;
+        public const int TotalDays = Weeks * DaysPerWeek;
 
         private const float ChartHeight = MaxPef * PefSize;
-        private const float ChartWidth = Weeks * DaysPerWeek * DayWidth;
+        private const float ChartWidth = TotalDays * DayWidth;
 
         private const float Width = ChartWidth + SideColumnWidth * 2;
         private const float Height = TopRow + DataHeight;
@@ -36,6 +38,10 @@ namespace LocalPefChartinator
 
         public static string Generate(IReadOnlyList<DataPoint> data)
         {
+            if (PagesBetween(data.First(), data.Last()) > 0)
+            {
+                throw new ArgumentException("An svg cannot contain more than 21 days");
+            }
             data = data.OrderBy(point => point.Time).ToArray();
             var document = new SvgDocument
             {
@@ -93,7 +99,7 @@ namespace LocalPefChartinator
             group.Children.Add(GetDayGroup(0, ChartHeight));
             group.Children.Add(GetDateGroup(0, ChartHeight + DayRow));
 
-            for (int i = 0; i <= Weeks * DaysPerWeek * SegmentsPerDay; i++)
+            for (int i = 0; i <= TotalDays * SegmentsPerDay; i++)
             {
                 float x = i * SegmentWidth;
                 bool endOfWeek = (i % (SegmentsPerDay * DaysPerWeek)) == 0;
@@ -168,7 +174,7 @@ namespace LocalPefChartinator
         private static SvgGroup GetChartGroup(float left, float top)
         {
             SvgGroup group = Group(left, top);
-            for (int i = 0; i < Weeks * DaysPerWeek; i += 2)
+            for (int i = 0; i < TotalDays; i += 2)
             {
                 float x = DayWidth * i;
                 group.Children.Add(Rect(x, 0, DayWidth, ChartHeight, Color.Cyan));
@@ -319,5 +325,19 @@ namespace LocalPefChartinator
         {
             return new SvgTransformCollection() { new SvgTranslate(left, top) };
         }
+
+        public static int PagesBetween(DataPoint start, DataPoint end)
+        {
+            return (int) (Period.Between(start.Time.Date, end.Time.Date).Days / (DaysPerWeek * Weeks));
+        }
+
+        public static IEnumerable<ZonedDateTime> PageEnds(ZonedDateTime s)
+        {
+            while (true)
+            {
+                s = s.PlusDays(TotalDays);
+                yield return s;
+            }
+        } 
     }
 }

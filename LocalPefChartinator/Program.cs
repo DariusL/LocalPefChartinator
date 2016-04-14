@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Text;
 using CommandLine;
+using LocalPefChartinator.Util;
+using NodaTime;
 
 namespace LocalPefChartinator
 {
@@ -50,7 +54,9 @@ namespace LocalPefChartinator
                     .Select(line => line.Split(','))
                     .Select(array => new Tuple<string, string>(array[0], array[1]));
 
-            var parsed = DataParser.Parse(values, options.TimeZone);
+            var parsed = DataParser.Parse(values, options.TimeZone)
+                .OrderBy(value => value.Time)
+                .ToArray();
                 
             Write(ChartGenerator.Generate(parsed), format, options.OutputFile);
         }
@@ -72,34 +78,35 @@ namespace LocalPefChartinator
 
         private static void Write(string svg, OutputFormat format, string file)
         {
+            Stream stream;
             switch (format)
             {
                 case OutputFormat.Svg:
-                    WriteSvg(svg, file);
+                    stream = GenerateSvg(svg, file);
                     break;
                 case OutputFormat.Html:
-                    WriteHtml(svg, file);
+                    stream = GenerateHtml(svg, file);
                     break;
                 case OutputFormat.Pdf:
-                    WritePdf(svg, file);
+                    stream = GeneratePdf(svg, file);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException("format", format, null);
             }
+            stream.CopyTo(File.OpenWrite(file));
         }
 
-        private static void WriteSvg(string svg, string file)
+        private static Stream GenerateSvg(string svg, string file)
         {
-            File.WriteAllText(file, svg);
+            return Stream(svg);
         }
 
-        private static void WriteHtml(string svg, string file)
+        private static Stream GenerateHtml(string svg, string file)
         {
-            string result = SvgToHtml(svg);
-            File.WriteAllText(file, result);
+            return Stream(SvgToHtml(svg));
         }
 
-        private static void WritePdf(string svg, string file)
+        private static Stream GeneratePdf(string svg, string file)
         {
             string key = "8393e676-9660-4fc0-a9c2-674a3614f650";
             string html = SvgToHtml(svg);
@@ -107,9 +114,7 @@ namespace LocalPefChartinator
             {
                 NameValueCollection options = new NameValueCollection {{"apikey", key}, {"value", html}};
 
-                var result = client.UploadValues("http://api.html2pdfrocket.com/pdf", options);
-
-                File.WriteAllBytes(file, result);
+                return new MemoryStream(client.UploadValues("http://api.html2pdfrocket.com/pdf", options));
             }
         }
 
@@ -120,6 +125,31 @@ namespace LocalPefChartinator
             var lineEnd = svg.IndexOf(Environment.NewLine, StringComparison.InvariantCulture);
             svg = svg.Substring(lineEnd + Environment.NewLine.Length);
             return template.Replace("<!--content-->", svg);
+        }
+
+        private static Stream Stream(string str)
+        {
+            return new MemoryStream(Encoding.UTF8.GetBytes(str));
+        }
+
+        public static IEnumerable<IReadOnlyList<DataPoint>> Group(IReadOnlyList<DataPoint> data)
+        {
+            LocalDate pageEnd = data.First().Time.Date.PlusDays(ChartGenerator.TotalDays);
+            List<DataPoint> temp = new List<DataPoint>();
+            foreach (var point in data)
+            {
+                if (!point.Time.Date.IsBefore(pageEnd))
+                {
+                    yield return temp;
+                    temp = new List<DataPoint>(){point};
+                    pageEnd = pageEnd.PlusDays(ChartGenerator.TotalDays);
+                }
+                else
+                {
+                    temp.Add(point);
+                }
+            }
+            yield return temp;
         }
     }
 }
