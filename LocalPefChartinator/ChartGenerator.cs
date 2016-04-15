@@ -37,11 +37,6 @@ namespace LocalPefChartinator
 
         public static string Generate(IReadOnlyList<DataPoint> data)
         {
-            if (PagesBetween(data.First(), data.Last()) > 0)
-            {
-                throw new ArgumentException("An svg cannot contain more than 21 days");
-            }
-            data = data.OrderBy(point => point.Time).ToArray();
             var document = new SvgDocument
             {
                 Width = Width + Padding * 2,
@@ -323,11 +318,6 @@ namespace LocalPefChartinator
         private static SvgTransformCollection Translate(float left, float top)
         {
             return new SvgTransformCollection() { new SvgTranslate(left, top) };
-        }
-
-        public static int PagesBetween(DataPoint start, DataPoint end)
-        {
-            return (int) (Period.Between(start.Time.Date, end.Time.Date).Days / (DaysPerWeek * Weeks));
         }
     }
 }

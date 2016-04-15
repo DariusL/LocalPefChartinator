@@ -55,13 +55,6 @@ namespace Test
         }
 
         [TestMethod]
-        public void TestInterval()
-        {
-            Assert.AreEqual(0, ChartGenerator.PagesBetween(Point(now), Point(now.PlusDays(20))));
-            Assert.AreEqual(1, ChartGenerator.PagesBetween(Point(now), Point(now.PlusDays(21))));
-        }
-
-        [TestMethod]
         public void TestPaging()
         {
             var data = new[]
