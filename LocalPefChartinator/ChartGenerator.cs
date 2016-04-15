@@ -89,6 +89,15 @@ namespace LocalPefChartinator
         private static SvgGroup GetDataGroup(float left, float top, IReadOnlyList<DataPoint> data)
         {
             SvgGroup group = Group(left, top);
+            var definitions = new SvgDefinitionList();
+            var clip = new SvgClipPath()
+            {
+                ID = "data-clip"
+            };
+            clip.Children.Add(Rect(0, 0, ChartWidth, ChartHeight));
+            definitions.Children.Add(clip);
+            group.Children.Add(definitions);
+
             group.Children.Add(GetChartGroup(0, 0));
             group.Children.Add(GetDayGroup(0, ChartHeight));
             group.Children.Add(GetDateGroup(0, ChartHeight + DayRow));
@@ -103,7 +112,9 @@ namespace LocalPefChartinator
 
             group.Children.Add(Line(0, ChartHeight + DayRow, ChartWidth, ChartHeight + DayRow));
 
-            group.Children.Add(GetChartDataGroup(0, 0, data));
+            var chartDataGroup = GetChartDataGroup(0, 0, data);
+            chartDataGroup.ClipPath = new Uri(string.Format("url(#{0})", clip.ID), UriKind.Relative);
+            group.Children.Add(chartDataGroup);
             group.Children.Add(GetDaysDataGroup(0, ChartHeight, data.First().Time.Date));
 
             return group;
@@ -114,16 +125,7 @@ namespace LocalPefChartinator
             var first = data.First();
             var start = first.Time.Date.At(new LocalTime(0, 0));
 
-            var defs = new SvgDefinitionList();
-            var clip = new SvgClipPath()
-            {
-                ID = "clip"
-            };
-            clip.Children.Add(Rect(0, 0, ChartWidth, ChartHeight));
-            defs.Children.Add(clip);
-
             SvgGroup group = Group(left, top);
-            group.Children.Add(defs);
             for (int i = 0; i < data.Count; i++)
             {
                 var point = data[i];
@@ -136,8 +138,6 @@ namespace LocalPefChartinator
                     var x = GetPointX(start, previous);
                     var y = GetPointY(previous);
                     var line = Line(x, y, cx, cy);
-                    line.ClipPath = new Uri("url(#clip)", UriKind.Relative);
-                    line.ClipRule = SvgClipRule.NonZero;
                     group.Children.Add(line);
                 }
             }
