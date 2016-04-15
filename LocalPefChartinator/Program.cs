@@ -31,7 +31,7 @@ namespace LocalPefChartinator
         public static void Main(string[] args)
         {
             Options options = new Options();
-            if (!CommandLine.Parser.Default.ParseArgumentsStrict(args, options, () => { }))
+            if (!Parser.Default.ParseArgumentsStrict(args, options, () => { }))
             {
                 return;
             }
@@ -50,7 +50,14 @@ namespace LocalPefChartinator
                 .OrderBy(value => value.Time)
                 .ToArray();
 
-            ChartWriter.Write(parsed, format, options.OutputFile);
+            Write(parsed, format, options.OutputFile);
+        }
+
+        public static void Write(IReadOnlyList<DataPoint> points, ChartWriter.OutputFormat format, string file)
+        {
+            var stream = ChartWriter.Stream(points, format);
+            File.Delete(file);
+            stream.CopyTo(File.OpenWrite(file));
         }
     }
 }

@@ -36,7 +36,7 @@ namespace LocalPefChartinator
             }
         }
 
-        public static void Write(IReadOnlyList<DataPoint> points, OutputFormat format, string file)
+        public static Stream Stream(IReadOnlyList<DataPoint> points, OutputFormat format)
         {
             Stream stream;
             switch (format)
@@ -53,8 +53,7 @@ namespace LocalPefChartinator
                 default:
                     throw new ArgumentOutOfRangeException("format", format, null);
             }
-            File.Delete(file);
-            stream.CopyTo(File.OpenWrite(file));
+            return stream;
         }
 
         private static string GenerateSvg(IReadOnlyList<DataPoint> points)
