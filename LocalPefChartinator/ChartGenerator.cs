@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using NodaTime;
 using Svg;
 using Svg.Transforms;
-using LocalPefChartinator.Util;
 
 namespace LocalPefChartinator
 {
@@ -330,14 +329,5 @@ namespace LocalPefChartinator
         {
             return (int) (Period.Between(start.Time.Date, end.Time.Date).Days / (DaysPerWeek * Weeks));
         }
-
-        public static IEnumerable<ZonedDateTime> PageEnds(ZonedDateTime s)
-        {
-            while (true)
-            {
-                s = s.PlusDays(TotalDays);
-                yield return s;
-            }
-        } 
     }
 }

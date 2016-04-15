@@ -58,7 +58,7 @@ namespace LocalPefChartinator
                 .OrderBy(value => value.Time)
                 .ToArray();
                 
-            Write(ChartGenerator.Generate(parsed), format, options.OutputFile);
+            Write(parsed, format, options.OutputFile);
         }
 
         private static OutputFormat ParseFormat(string formatString)
@@ -76,19 +76,19 @@ namespace LocalPefChartinator
             }
         }
 
-        private static void Write(string svg, OutputFormat format, string file)
+        private static void Write(IReadOnlyList<DataPoint> points, OutputFormat format, string file)
         {
             Stream stream;
             switch (format)
             {
                 case OutputFormat.Svg:
-                    stream = GenerateSvg(svg, file);
+                    stream = StreamSvg(points);
                     break;
                 case OutputFormat.Html:
-                    stream = GenerateHtml(svg, file);
+                    stream = StreamHtml(points);
                     break;
                 case OutputFormat.Pdf:
-                    stream = GeneratePdf(svg, file);
+                    stream = StreamPdf(points);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException("format", format, null);
@@ -96,26 +96,36 @@ namespace LocalPefChartinator
             stream.CopyTo(File.OpenWrite(file));
         }
 
-        private static Stream GenerateSvg(string svg, string file)
+        private static string GenerateSvg(IReadOnlyList<DataPoint> points)
         {
-            return Stream(svg);
+            return ChartGenerator.Generate(points);
         }
 
-        private static Stream GenerateHtml(string svg, string file)
+        private static string GenerateHtml(IReadOnlyList<DataPoint> points)
         {
-            return Stream(SvgToHtml(svg));
+            return SvgToHtml(GenerateSvg(points));
         }
 
-        private static Stream GeneratePdf(string svg, string file)
+        private static Stream StreamPdf(IReadOnlyList<DataPoint> points)
         {
             string key = "8393e676-9660-4fc0-a9c2-674a3614f650";
-            string html = SvgToHtml(svg);
+            string html = GenerateHtml(points);
             using (var client = new WebClient())
             {
-                NameValueCollection options = new NameValueCollection {{"apikey", key}, {"value", html}};
+                NameValueCollection options = new NameValueCollection { { "apikey", key }, { "value", html } };
 
                 return new MemoryStream(client.UploadValues("http://api.html2pdfrocket.com/pdf", options));
             }
+        }
+
+        private static Stream StreamSvg(IReadOnlyList<DataPoint> points)
+        {
+            return Stream(GenerateSvg(points));
+        }
+
+        private static Stream StreamHtml(IReadOnlyList<DataPoint> points)
+        {
+            return Stream(GenerateHtml(points));
         }
 
         private static string SvgToHtml(string svg)
