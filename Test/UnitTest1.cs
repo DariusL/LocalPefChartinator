@@ -71,7 +71,7 @@ namespace Test
                 new[] {Point(now.PlusDays(50))}
             };
 
-            var actual = Program.Group(data).Select(list => list.ToArray()).ToArray();
+            var actual = ChartWriter.Group(data).Select(list => list.ToArray()).ToArray();
 
             AssertArraysEqual(expected, actual);
         }

@@ -58,6 +58,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ChartGenerator.cs" />
+    <Compile Include="ChartWriter.cs" />
     <Compile Include="DataParser.cs" />
     <Compile Include="DataPoint.cs" />
     <Compile Include="Program.cs" />
