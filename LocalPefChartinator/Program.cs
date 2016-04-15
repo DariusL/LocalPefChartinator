@@ -103,7 +103,18 @@ namespace LocalPefChartinator
 
         private static string GenerateHtml(IReadOnlyList<DataPoint> points)
         {
-            return SvgToHtml(GenerateSvg(points));
+            var content = String.Join(Environment.NewLine, Group(points)
+                .Select(GenerateSvg)
+                .Select(SvgForPrint));
+            string template = File.ReadAllText("template.html");
+            return template.Replace("<!--content-->", content);
+        }
+
+        private static string SvgForPrint(string svg)
+        {
+            // because Svg uses invariant culture when XML'ing
+            var lineEnd = svg.IndexOf(Environment.NewLine, StringComparison.InvariantCulture);
+            return svg.Substring(lineEnd + Environment.NewLine.Length);
         }
 
         private static Stream StreamPdf(IReadOnlyList<DataPoint> points)
@@ -126,15 +137,6 @@ namespace LocalPefChartinator
         private static Stream StreamHtml(IReadOnlyList<DataPoint> points)
         {
             return Stream(GenerateHtml(points));
-        }
-
-        private static string SvgToHtml(string svg)
-        {
-            string template = File.ReadAllText("template.html");
-            // because Svg uses invariant culture when XML'ing
-            var lineEnd = svg.IndexOf(Environment.NewLine, StringComparison.InvariantCulture);
-            svg = svg.Substring(lineEnd + Environment.NewLine.Length);
-            return template.Replace("<!--content-->", svg);
         }
 
         private static Stream Stream(string str)
