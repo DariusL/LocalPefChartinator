@@ -93,6 +93,7 @@ namespace LocalPefChartinator
                 default:
                     throw new ArgumentOutOfRangeException("format", format, null);
             }
+            File.Delete(file);
             stream.CopyTo(File.OpenWrite(file));
         }
 
