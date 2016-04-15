@@ -2,6 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.ExceptionServices;
+using System.Security.Claims;
+using System.Text;
 using LocalPefChartinator;
 using LocalPefChartinator.Util;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -75,41 +78,69 @@ namespace Test
                 new[] {Point(now.PlusDays(50))}
             };
 
-            var actual = Program.Group(data).ToArray();
+            var actual = Program.Group(data).Select(list => list.ToArray()).ToArray();
 
-            AssertEquals(expected, actual);
+            AssertArraysEqual(expected, actual);
         }
 
-        public static void AssertEquals(object left, object right)
+        public static string ArrayToString(dynamic a)
         {
-            if (!(left is IEnumerable && right is IEnumerable))
+            if (a.GetType().IsArray)
             {
-                Assert.AreEqual(left, right);
+                StringBuilder builder = new StringBuilder();
+                builder.Append("[");
+                string delim = "";
+                foreach (var o in a)
+                {
+                    builder.Append(delim).Append(ArrayToString(o));
+                    delim = ", ";
+                }
+                builder.Append("]");
+                return builder.ToString();
+            }
+            else
+            {
+                return a.ToString();
+            }
+        }
+
+        public static void AssertArraysEqual(dynamic expected, dynamic actual)
+        {
+            Assert.IsTrue(ArraysEqual(expected, actual), "Expected: <{0}>, actual: <{1}>", ArrayToString(expected), ArrayToString(actual));
+        }
+
+        public static bool ArraysEqual(dynamic a, dynamic b)
+        {
+            // Same objects or both null
+            if (ReferenceEquals(a, b))
+            {
+                return true;
             }
 
-            var leftEnumerable = left as IEnumerable<object>;
-            var rightEnumerable = right as IEnumerable<object>;
-
-            leftEnumerable.Zip<object, object, object>(rightEnumerable, (o, o1) => { AssertEquals(o, o1); return null;}).ToArray();
-        }
-
-        [TestMethod]
-        public void TestPagesBetween()
-        {
-            var data = new[]
+            // Just one object is null
+            if (ReferenceEquals(a, null) || ReferenceEquals(b, null))
             {
-                Point(now), Point(now.PlusDays(5)), Point(now.PlusDays(20)),
-                Point(now.PlusDays(21)), Point(now.PlusDays(25)),
-                Point(now.PlusDays(50))
-            };
-            var expected = new int[]
+                return false;
+            }
+
+            if (a.GetType().IsArray && b.GetType().IsArray)
             {
-                0, 0, 0,
-                1, 1,
-                2
-            };
-            var actual = data.Select(point => ChartGenerator.PagesBetween(data[0], point)).ToArray();
-            Assert.IsTrue(expected.SequenceEqual(actual));
+                if (a.Length == b.Length)
+                {
+                    for (int i = 0; i < a.Length; i++)
+                    {
+                        if (!ArraysEqual(a[i], b[i]))
+                        {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+                return false;
+            }
+
+            // fall back to simple value compare
+            return Equals(a, b);
         }
 
         [TestMethod]
