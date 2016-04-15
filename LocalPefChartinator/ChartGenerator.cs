@@ -114,7 +114,16 @@ namespace LocalPefChartinator
             var first = data.First();
             var start = first.Time.Date.At(new LocalTime(0, 0));
 
+            var defs = new SvgDefinitionList();
+            var clip = new SvgClipPath()
+            {
+                ID = "clip"
+            };
+            clip.Children.Add(Rect(0, 0, ChartWidth, ChartHeight));
+            defs.Children.Add(clip);
+
             SvgGroup group = Group(left, top);
+            group.Children.Add(defs);
             for (int i = 0; i < data.Count; i++)
             {
                 var point = data[i];
@@ -126,7 +135,10 @@ namespace LocalPefChartinator
                     var previous = data[i - 1];
                     var x = GetPointX(start, previous);
                     var y = GetPointY(previous);
-                    group.Children.Add(Line(x, y, cx, cy));
+                    var line = Line(x, y, cx, cy);
+                    line.ClipPath = new Uri("url(#clip)", UriKind.Relative);
+                    line.ClipRule = SvgClipRule.NonZero;
+                    group.Children.Add(line);
                 }
             }
             return group;
@@ -231,7 +243,7 @@ namespace LocalPefChartinator
             return group;
         }
 
-        private static SvgElement Line(float x1, float y1, float x2, float y2)
+        private static SvgVisualElement Line(float x1, float y1, float x2, float y2)
         {
             return Line(x1, y1, x2, y2, 1f);
         }
