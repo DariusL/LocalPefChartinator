@@ -35,10 +35,14 @@ namespace LocalPefChartinator
             {
                 return;
             }
-            ChartWriter.OutputFormat format = ChartWriter.ParseFormat(options.OutputFormat);
-            if (format == ChartWriter.OutputFormat.Invalid)
+            ChartWriter.OutputFormat format;
+            try
             {
-                Console.WriteLine("Invalid output format " + options.OutputFormat);
+                format = ChartWriter.ParseFormat(options.OutputFormat);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
                 return;
             }
             var values =
@@ -46,7 +50,7 @@ namespace LocalPefChartinator
                     .Select(line => line.Split(','))
                     .Select(array => new SerializedDataPoint() {Time = array[0], Pef = array[1]});
 
-            var parsed = DataParser.Parse(values, options.TimeZone)
+            var parsed = DataParser.Parse(values, DataParser.ParseTimeZone(options.TimeZone))
                 .OrderBy(value => value.Time)
                 .ToArray();
 

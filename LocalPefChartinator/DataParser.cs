@@ -13,10 +13,16 @@ namespace LocalPefChartinator
 {
     public class DataParser
     {
-        public static IReadOnlyList<DataPoint> Parse(IEnumerable<SerializedDataPoint> data, string timezone)
+        public static IReadOnlyList<DataPoint> Parse(IEnumerable<SerializedDataPoint> data, DateTimeZone timezone)
         {
-            DateTimeZone tz = ParseTimeZone(timezone);
-            return data.Select(item => Parse(item, tz)).ToArray();
+            try
+            {
+                return data.Select(item => Parse(item, timezone)).ToArray();
+            }
+            catch (Exception e)
+            {
+                throw new ArgumentException("Cannot parse data", e);
+            }
         }
 
         private static DataPoint Parse(SerializedDataPoint serialized, DateTimeZone timezone)

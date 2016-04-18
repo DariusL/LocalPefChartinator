@@ -10,6 +10,7 @@ using System.Web.Hosting;
 using System.Web.Http;
 using System.Web.Http.Results;
 using LocalPefChartinator;
+using NodaTime;
 
 namespace WebInterface.Controllers
 {
@@ -19,15 +20,50 @@ namespace WebInterface.Controllers
 
         [HttpPost]
         [Route("api/chart")]
-        public IHttpActionResult GenerateChart([FromBody] IEnumerable<SerializedDataPoint> data, string format, string timezone = "Z")
+        public IHttpActionResult GenerateChart([FromBody] List<SerializedDataPoint> data, string format = "", string timezone = "Z")
         {
-            var deserialized = DataParser.Parse(data, timezone);
-            var parsedFormat = ChartWriter.ParseFormat(format);
+            if (data == null || data.Count == 0)
+            {
+                return new BadRequestErrorMessageResult("Missing PEF body", this);
+            }
+            ChartWriter.OutputFormat parsedFormat;
+            try
+            {
+                parsedFormat = ChartWriter.ParseFormat(format);
+            }
+            catch (ArgumentException)
+            {
+                return new BadRequestErrorMessageResult($"Invalid format {format}", this);
+            }
+
+            DateTimeZone dateTimeZone;
+            try
+            {
+                dateTimeZone = DataParser.ParseTimeZone(timezone);
+            }
+            catch (Exception)
+            {
+                return new BadRequestErrorMessageResult($"Invalid timezone {timezone}", this);
+            }
+            IReadOnlyList<DataPoint> deserialized;
+
+            try
+            {
+                deserialized = DataParser.Parse(data, dateTimeZone);
+            }
+            catch (Exception e)
+            {
+                return new BadRequestErrorMessageResult(e.Message, this);
+            }
             var stream = writer.Stream(deserialized, parsedFormat);
+            return WrapStream(stream, parsedFormat);
+        }
+
+        private static IHttpActionResult WrapStream(Stream stream, ChartWriter.OutputFormat parsedFormat)
+        {
             var httpResponseMessage = new HttpResponseMessage(HttpStatusCode.OK)
             {
-                Content = new StreamContent(stream),
-
+                Content = new StreamContent(stream)
             };
             httpResponseMessage.Content.Headers.ContentType = new MediaTypeHeaderValue(GetContentType(parsedFormat));
             return new ResponseMessageResult(httpResponseMessage);

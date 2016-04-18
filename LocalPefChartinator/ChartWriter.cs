@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -111,8 +112,7 @@ namespace LocalPefChartinator
         {
             Svg,
             Html,
-            Pdf,
-            Invalid
+            Pdf
         }
 
         public static OutputFormat ParseFormat(string formatString)
@@ -126,7 +126,7 @@ namespace LocalPefChartinator
                 case "pdf":
                     return OutputFormat.Pdf;
                 default:
-                    return OutputFormat.Invalid;
+                    throw new ArgumentException($"Invalid format {formatString}");
             }
         }
     }
