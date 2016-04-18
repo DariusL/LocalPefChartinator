@@ -53,9 +53,10 @@ namespace LocalPefChartinator
             Write(parsed, format, options.OutputFile);
         }
 
-        public static void Write(IReadOnlyList<DataPoint> points, ChartWriter.OutputFormat format, string file)
+        private static void Write(IReadOnlyList<DataPoint> points, ChartWriter.OutputFormat format, string file)
         {
-            var stream = ChartWriter.Stream(points, format);
+            var writer = new ChartWriter("template.html");
+            var stream = writer.Stream(points, format);
             File.Delete(file);
             stream.CopyTo(File.OpenWrite(file));
         }

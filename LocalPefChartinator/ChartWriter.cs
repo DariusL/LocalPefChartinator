@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
-using System.Threading.Tasks;
 using LocalPefChartinator.Util;
 using NodaTime;
 
@@ -13,30 +12,14 @@ namespace LocalPefChartinator
 {
     public class ChartWriter
     {
-        public enum OutputFormat
+        private readonly string _template;
+
+        public ChartWriter(string template)
         {
-            Svg,
-            Html,
-            Pdf,
-            Invalid
+            _template = template;
         }
 
-        public static OutputFormat ParseFormat(string formatString)
-        {
-            switch (formatString)
-            {
-                case "svg":
-                    return OutputFormat.Svg;
-                case "html":
-                    return OutputFormat.Html;
-                case "pdf":
-                    return OutputFormat.Pdf;
-                default:
-                    return OutputFormat.Invalid;
-            }
-        }
-
-        public static Stream Stream(IReadOnlyList<DataPoint> points, OutputFormat format)
+        public Stream Stream(IReadOnlyList<DataPoint> points, OutputFormat format)
         {
             Stream stream;
             switch (format)
@@ -51,22 +34,22 @@ namespace LocalPefChartinator
                     stream = StreamPdf(points);
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException("format", format, null);
+                    throw new ArgumentOutOfRangeException(nameof(format), format, null);
             }
             return stream;
         }
 
-        private static string GenerateSvg(IReadOnlyList<DataPoint> points)
+        private string GenerateSvg(IReadOnlyList<DataPoint> points)
         {
             return ChartGenerator.Generate(points);
         }
 
-        private static string GenerateHtml(IReadOnlyList<DataPoint> points)
+        private string GenerateHtml(IReadOnlyList<DataPoint> points)
         {
             var content = String.Join(Environment.NewLine, Group(points)
                 .Select(GenerateSvg)
                 .Select(SvgForPrint));
-            string template = File.ReadAllText("template.html");
+            string template = File.ReadAllText(_template);
             return template.Replace("<!--content-->", content);
         }
 
@@ -77,7 +60,7 @@ namespace LocalPefChartinator
             return svg.Substring(lineEnd + Environment.NewLine.Length);
         }
 
-        private static Stream StreamPdf(IReadOnlyList<DataPoint> points)
+        private Stream StreamPdf(IReadOnlyList<DataPoint> points)
         {
             string key = "8393e676-9660-4fc0-a9c2-674a3614f650";
             string html = GenerateHtml(points);
@@ -89,12 +72,12 @@ namespace LocalPefChartinator
             }
         }
 
-        private static Stream StreamSvg(IReadOnlyList<DataPoint> points)
+        private Stream StreamSvg(IReadOnlyList<DataPoint> points)
         {
             return Stream(GenerateSvg(points));
         }
 
-        private static Stream StreamHtml(IReadOnlyList<DataPoint> points)
+        private Stream StreamHtml(IReadOnlyList<DataPoint> points)
         {
             return Stream(GenerateHtml(points));
         }
@@ -122,6 +105,29 @@ namespace LocalPefChartinator
                 }
             }
             yield return temp;
+        }
+
+        public enum OutputFormat
+        {
+            Svg,
+            Html,
+            Pdf,
+            Invalid
+        }
+
+        public static OutputFormat ParseFormat(string formatString)
+        {
+            switch (formatString)
+            {
+                case "svg":
+                    return OutputFormat.Svg;
+                case "html":
+                    return OutputFormat.Html;
+                case "pdf":
+                    return OutputFormat.Pdf;
+                default:
+                    return OutputFormat.Invalid;
+            }
         }
     }
 }

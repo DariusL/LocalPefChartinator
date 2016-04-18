@@ -1,29 +1,36 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Web.Hosting;
 using System.Web.Http;
+using System.Web.Http.Results;
 using LocalPefChartinator;
 
 namespace WebInterface.Controllers
 {
     public class ChartController : ApiController
     {
+        private readonly ChartWriter writer = new ChartWriter(HostingEnvironment.MapPath("~/template.html"));
+
         [HttpPost]
         [Route("api/chart")]
-        public HttpResponseMessage GenerateChart([FromBody] IEnumerable<SerializedDataPoint> data, string format, string timezone = "Z")
+        public IHttpActionResult GenerateChart([FromBody] IEnumerable<SerializedDataPoint> data, string format, string timezone = "Z")
         {
             var deserialized = DataParser.Parse(data, timezone);
             var parsedFormat = ChartWriter.ParseFormat(format);
-            var stream = ChartWriter.Stream(deserialized, parsedFormat);
+            var stream = writer.Stream(deserialized, parsedFormat);
             var httpResponseMessage = new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new StreamContent(stream),
 
             };
             httpResponseMessage.Content.Headers.ContentType = new MediaTypeHeaderValue(GetContentType(parsedFormat));
-            return httpResponseMessage;
+            return new ResponseMessageResult(httpResponseMessage);
         }
 
         private static string GetContentType(ChartWriter.OutputFormat format)
