@@ -53,7 +53,15 @@ namespace LocalPefChartinator
 
         public static DateTimeZone ParseTimeZone(string zone)
         {
-            return DateTimeZone.ForOffset(OffsetPattern.GeneralInvariantPatternWithZ.Parse(zone).Value);
+
+            try
+            {
+                return DateTimeZone.ForOffset(OffsetPattern.GeneralInvariantPatternWithZ.Parse(zone).Value);
+            }
+            catch (Exception e)
+            {
+                throw new ArgumentException($"Invalid {nameof(zone)} {zone}", e);
+            }
         }
     }
 }

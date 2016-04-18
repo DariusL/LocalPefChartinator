@@ -22,41 +22,24 @@ namespace WebInterface.Controllers
         [Route("api/chart")]
         public IHttpActionResult GenerateChart([FromBody] List<SerializedDataPoint> data, string format = "", string timezone = "Z")
         {
-            if (data == null || data.Count == 0)
-            {
-                return new BadRequestErrorMessageResult("Missing PEF body", this);
-            }
-            ChartWriter.OutputFormat parsedFormat;
             try
             {
-                parsedFormat = ChartWriter.ParseFormat(format);
-            }
-            catch (ArgumentException)
-            {
-                return new BadRequestErrorMessageResult($"Invalid format {format}", this);
-            }
+                if (data == null || data.Count == 0)
+                {
+                    throw new ArgumentException("Missing PEF body");
+                }
+                var parsedFormat = ChartWriter.ParseFormat(format);
 
-            DateTimeZone dateTimeZone;
-            try
-            {
-                dateTimeZone = DataParser.ParseTimeZone(timezone);
+                var dateTimeZone = DataParser.ParseTimeZone(timezone);
+                var deserialized = DataParser.Parse(data, dateTimeZone);
+                
+                var stream = writer.Stream(deserialized, parsedFormat);
+                return WrapStream(stream, parsedFormat);
             }
-            catch (Exception)
-            {
-                return new BadRequestErrorMessageResult($"Invalid timezone {timezone}", this);
-            }
-            IReadOnlyList<DataPoint> deserialized;
-
-            try
-            {
-                deserialized = DataParser.Parse(data, dateTimeZone);
-            }
-            catch (Exception e)
+            catch (ArgumentException e)
             {
                 return new BadRequestErrorMessageResult(e.Message, this);
             }
-            var stream = writer.Stream(deserialized, parsedFormat);
-            return WrapStream(stream, parsedFormat);
         }
 
         private static IHttpActionResult WrapStream(Stream stream, ChartWriter.OutputFormat parsedFormat)
