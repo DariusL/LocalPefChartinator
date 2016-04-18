@@ -15,7 +15,7 @@ namespace LocalPefChartinator
 
         public override string ToString()
         {
-            return string.Format("Pef: {0}, Time: {1}", Pef, Time);
+            return $"Pef: {Pef}, Time: {Time}";
         }
 
         public bool Equals(DataPoint other)

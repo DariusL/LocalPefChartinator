@@ -13,17 +13,17 @@ namespace LocalPefChartinator
 {
     public class DataParser
     {
-        public static IReadOnlyList<DataPoint> Parse(IEnumerable<Tuple<string, string>> data, string timezone)
+        public static IReadOnlyList<DataPoint> Parse(IEnumerable<SerializedDataPoint> data, string timezone)
         {
             DateTimeZone tz = ParseTimeZone(timezone);
             return data.Select(item => Parse(item, tz)).ToArray();
         }
 
-        private static DataPoint Parse(Tuple<string, string> tuple, DateTimeZone timezone)
+        private static DataPoint Parse(SerializedDataPoint serialized, DateTimeZone timezone)
         {
-            long time = long.Parse(tuple.Item1);
+            long time = long.Parse(serialized.Time);
             Instant instant = Instant.FromSecondsSinceUnixEpoch(time);
-            int pef = int.Parse(tuple.Item2);
+            int pef = int.Parse(serialized.Pef);
             return new DataPoint(pef, new ZonedDateTime(instant, timezone));
         }
 
