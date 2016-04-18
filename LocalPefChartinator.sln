@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LocalPefChartinator", "Loca
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{749DC49F-2EAE-4A8B-AE02-E49B297BFD07}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebInterface", "WebInterface\WebInterface.csproj", "{31E7159D-A763-46F3-A276-3F84454D135A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{749DC49F-2EAE-4A8B-AE02-E49B297BFD07}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{749DC49F-2EAE-4A8B-AE02-E49B297BFD07}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{749DC49F-2EAE-4A8B-AE02-E49B297BFD07}.Release|Any CPU.Build.0 = Release|Any CPU
+		{31E7159D-A763-46F3-A276-3F84454D135A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{31E7159D-A763-46F3-A276-3F84454D135A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{31E7159D-A763-46F3-A276-3F84454D135A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{31E7159D-A763-46F3-A276-3F84454D135A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
