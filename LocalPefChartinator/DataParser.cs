@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Text;
+using System.Threading.Tasks;
 using NodaTime;
 using NodaTime.Text;
 using NodaTime.TimeZones;
@@ -57,7 +60,7 @@ namespace LocalPefChartinator
             }
             catch (Exception e)
             {
-                throw new ArgumentException($"Invalid zone {zone}", e);
+                throw new ArgumentException(String.Format("Invalid zone {0}", zone), e);
             }
         }
     }
