@@ -27,9 +27,9 @@ namespace LocalPefChartinator
 
         private static DataPoint Parse(SerializedDataPoint serialized, DateTimeZone timezone)
         {
-            long time = long.Parse(serialized.Time);
+            long time = long.Parse(serialized.time);
             Instant instant = Instant.FromSecondsSinceUnixEpoch(time);
-            int pef = int.Parse(serialized.Pef);
+            int pef = int.Parse(serialized.pef);
             return new DataPoint(pef, new ZonedDateTime(instant, timezone));
         }
 

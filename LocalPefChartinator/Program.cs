@@ -48,7 +48,7 @@ namespace LocalPefChartinator
             var values =
                 File.ReadLines(options.InputFile)
                     .Select(line => line.Split(','))
-                    .Select(array => new SerializedDataPoint() {Time = array[0], Pef = array[1]});
+                    .Select(array => new SerializedDataPoint() {time = array[0], pef = array[1]});
 
             var parsed = DataParser.Parse(values, DataParser.ParseTimeZone(options.TimeZone))
                 .OrderBy(value => value.Time)

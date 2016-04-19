@@ -8,7 +8,7 @@ namespace LocalPefChartinator
 {
     public struct SerializedDataPoint
     {
-        public string Pef { set; get; }
-        public string Time { set; get; }
+        public string pef { set; get; }
+        public string time { set; get; }
     }
 }
