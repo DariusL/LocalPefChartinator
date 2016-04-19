@@ -126,7 +126,7 @@ namespace LocalPefChartinator
                 case "pdf":
                     return OutputFormat.Pdf;
                 default:
-                    throw new ArgumentException($"Invalid format {formatString}");
+                    throw new ArgumentException(String.Format("Invalid format {0}", formatString));
             }
         }
     }

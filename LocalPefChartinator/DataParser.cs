@@ -60,7 +60,7 @@ namespace LocalPefChartinator
             }
             catch (Exception e)
             {
-                throw new ArgumentException($"Invalid {nameof(zone)} {zone}", e);
+                throw new ArgumentException(String.Format("Invalid {0} {1}", nameof(zone), zone), e);
             }
         }
     }

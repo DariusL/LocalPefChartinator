@@ -1,4 +1,5 @@
-﻿using NodaTime;
+﻿using System;
+using NodaTime;
 
 namespace LocalPefChartinator
 {
@@ -15,7 +16,7 @@ namespace LocalPefChartinator
 
         public override string ToString()
         {
-            return $"Pef: {Pef}, Time: {Time}";
+            return String.Format("Pef: {0}, Time: {1}", Pef, Time);
         }
 
         public bool Equals(DataPoint other)
