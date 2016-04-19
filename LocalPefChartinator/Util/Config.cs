@@ -7,12 +7,14 @@ using System.Threading.Tasks;
 
 namespace LocalPefChartinator.Util
 {
-    class Config
+    public class Config
     {
         public static String Get(string key)
         {
             var fromConfig = ConfigurationManager.AppSettings[key];
-            return string.IsNullOrEmpty(fromConfig) ? Environment.GetEnvironmentVariable(key) : fromConfig;
+            return String.IsNullOrWhiteSpace(fromConfig) ? Environment.GetEnvironmentVariable(key) : fromConfig;
         }
+
+        public const string KeyHtml2Pdf = "KEY_HTML_2_PDF";
     }
 }

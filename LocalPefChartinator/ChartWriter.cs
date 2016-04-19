@@ -13,7 +13,6 @@ namespace LocalPefChartinator
 {
     public class ChartWriter
     {
-        private const string KeyHtml2Pdf = "KEY_HTML_2_PDF";
         private readonly string _template;
 
         public ChartWriter(string template)
@@ -62,7 +61,7 @@ namespace LocalPefChartinator
 
         private Stream StreamPdf(IReadOnlyList<DataPoint> points)
         {
-            string key = Config.Get(KeyHtml2Pdf);
+            string key = Config.Get(Config.KeyHtml2Pdf);
             string html = GenerateHtml(points);
             using (var client = new WebClient())
             {
