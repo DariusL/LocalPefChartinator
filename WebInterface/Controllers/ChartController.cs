@@ -63,7 +63,7 @@ namespace WebInterface.Controllers
                 case ChartWriter.OutputFormat.Pdf:
                     return "application/pdf";
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(format), format, null);
+                    throw new ArgumentOutOfRangeException("format", format, null);
             }
         }
     }

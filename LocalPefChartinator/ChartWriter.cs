@@ -35,7 +35,7 @@ namespace LocalPefChartinator
                     stream = StreamPdf(points);
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(format), format, null);
+                    throw new ArgumentOutOfRangeException("format", format, null);
             }
             return stream;
         }
@@ -47,9 +47,7 @@ namespace LocalPefChartinator
 
         private string GenerateHtml(IReadOnlyList<DataPoint> points)
         {
-            var content = String.Join(Environment.NewLine, Group(points)
-                .Select(GenerateSvg)
-                .Select(SvgForPrint));
+            var content = String.Join(Environment.NewLine, Group(points).Select(GenerateSvg).Select(SvgForPrint));
             string template = File.ReadAllText(_template);
             return template.Replace("<!--content-->", content);
         }
@@ -67,7 +65,7 @@ namespace LocalPefChartinator
             string html = GenerateHtml(points);
             using (var client = new WebClient())
             {
-                NameValueCollection options = new NameValueCollection { { "apikey", key }, { "value", html } };
+                NameValueCollection options = new NameValueCollection {{"apikey", key}, {"value", html}};
 
                 return new MemoryStream(client.UploadValues("http://api.html2pdfrocket.com/pdf", options));
             }
@@ -97,7 +95,7 @@ namespace LocalPefChartinator
                 if (!point.Time.Date.IsBefore(pageEnd))
                 {
                     yield return temp;
-                    temp = new List<DataPoint>() { point };
+                    temp = new List<DataPoint>() {point};
                     pageEnd = pageEnd.PlusDays(ChartGenerator.TotalDays);
                 }
                 else
